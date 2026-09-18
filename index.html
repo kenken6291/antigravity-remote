@@ -217,8 +217,6 @@
     cursor: pointer;
   }
 
-  .chip:active { background: #334155; }
-
   .submit-btn {
     background: linear-gradient(135deg, #0EA5E9 0%, #2563EB 100%);
     color: #FFFFFF;
@@ -285,6 +283,21 @@
     max-height: 120px;
     overflow-y: auto;
     white-space: pre-wrap;
+  }
+
+  .btn-output-link {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    background: linear-gradient(135deg, #10B981 0%, #059669 100%);
+    color: #FFFFFF;
+    text-decoration: none;
+    padding: 14px;
+    border-radius: 12px;
+    font-size: 14px;
+    font-weight: 800;
+    box-shadow: 0 4px 14px rgba(16, 185, 129, 0.3);
   }
 
   .btn-drive-link {
@@ -392,6 +405,11 @@
       </button>
     </div>
 
+    <!-- Output Folder Link Button -->
+    <a href="https://drive.google.com/drive/u/0/folders/1TKxNmocrE77blPUPt2qlbi3MT8VlramY" target="_blank" class="btn-output-link">
+      📊 完成資料 output フォルダーを開く (1TKxNmocrE...) 📂
+    </a>
+
     <div class="card">
       <div class="card-label">
         <span>通信ログ / 状況</span>
@@ -400,7 +418,7 @@
     </div>
 
     <a href="https://drive.google.com/drive/u/0/folders/1p21f3HGMtHaBi4n2U5I04S3CuY2quAMp" target="_blank" class="btn-drive-link">
-      📁 Google Drive (1p21f3HGMtHaBi4n2U5I04S3CuY2quAMp) で『外からの指示.txt』を開く
+      📁 指し入力用『外からの指示.txt』を開く (1p21f3HGMt...)
     </a>
 
   </div>
