@@ -148,7 +148,7 @@
     color: #F8FAFC;
     padding: 6px 10px;
     border-radius: 8px;
-    font-size: 12px;
+    font-size: 13px;
     outline: none;
   }
 
@@ -159,14 +159,13 @@
 
   textarea {
     width: 100%;
-    height: 120px;
+    height: 110px;
     background: #0F172A;
     border: 1.5px solid #334155;
     border-radius: 12px;
-    padding: 14px;
-    padding-right: 48px;
+    padding: 12px 48px 12px 14px;
     color: #F8FAFC;
-    font-size: 15px;
+    font-size: 14px;
     line-height: 1.5;
     resize: none;
     outline: none;
@@ -178,23 +177,22 @@
     position: absolute;
     right: 10px;
     bottom: 12px;
-    background: #334155;
-    color: #38BDF8;
-    border: none;
-    width: 38px;
-    height: 38px;
+    width: 36px;
+    height: 36px;
     border-radius: 50%;
+    background: #334155;
+    border: none;
+    color: #F8FAFC;
+    font-size: 16px;
+    cursor: pointer;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 18px;
-    cursor: pointer;
   }
 
   .mic-btn.recording {
     background: #EF4444;
-    color: #FFFFFF;
-    animation: pulse 1s infinite;
+    animation: pulse 1.2s infinite;
   }
 
   @keyframes pulse {
@@ -203,55 +201,10 @@
     100% { transform: scale(1); }
   }
 
-  .gas-config-box {
-    background: rgba(14, 165, 233, 0.1);
-    border: 1px dashed #0284C7;
-    border-radius: 10px;
-    padding: 12px;
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-  }
-
-  .gas-config-title {
-    font-size: 12px;
-    font-weight: 700;
-    color: #38BDF8;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-  }
-
-  .gas-url-input {
-    background: #0F172A;
-    border: 1px solid #334155;
-    color: #F8FAFC;
-    padding: 10px 12px;
-    border-radius: 8px;
-    font-size: 12px;
-    width: 100%;
-    outline: none;
-  }
-
-  .gas-url-input:focus { border-color: #38BDF8; }
-
-  .save-url-btn {
-    background: #0284C7;
-    color: #FFFFFF;
-    border: none;
-    padding: 8px;
-    border-radius: 6px;
-    font-size: 12px;
-    font-weight: 700;
-    cursor: pointer;
-  }
-
   .chip-group {
     display: flex;
     gap: 8px;
-    overflow-x: auto;
-    padding-bottom: 4px;
-    scrollbar-width: none;
+    flex-wrap: wrap;
   }
 
   .chip {
@@ -261,42 +214,86 @@
     padding: 6px 12px;
     border-radius: 20px;
     font-size: 12px;
-    font-weight: 600;
-    white-space: nowrap;
     cursor: pointer;
   }
 
+  .chip:active { background: #334155; }
+
   .submit-btn {
-    background: linear-gradient(135deg, #0284C7 0%, #2563EB 100%);
+    background: linear-gradient(135deg, #0EA5E9 0%, #2563EB 100%);
     color: #FFFFFF;
     border: none;
     padding: 14px;
     border-radius: 12px;
-    font-size: 16px;
+    font-size: 15px;
     font-weight: 700;
     cursor: pointer;
     display: flex;
-    align-items: center;
     justify-content: center;
+    align-items: center;
     gap: 8px;
+    box-shadow: 0 4px 14px rgba(14, 165, 233, 0.3);
+  }
+
+  .gas-config-box {
+    background: #0F172A;
+    border: 1px dashed #475569;
+    border-radius: 12px;
+    padding: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .gas-config-title {
+    font-size: 12px;
+    color: #38BDF8;
+    font-weight: 700;
+    display: flex;
+    justify-content: space-between;
+  }
+
+  .gas-url-input {
+    width: 100%;
+    background: #1E293B;
+    border: 1px solid #334155;
+    color: #F8FAFC;
+    padding: 8px;
+    border-radius: 6px;
+    font-size: 12px;
+  }
+
+  .save-url-btn {
+    background: #334155;
+    color: #38BDF8;
+    border: 1px solid #38BDF8;
+    padding: 6px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 700;
+    cursor: pointer;
   }
 
   .log-box {
     background: #0F172A;
     border: 1px solid #334155;
-    border-radius: 10px;
-    padding: 12px;
-    font-size: 12px;
-    color: #94A3B8;
+    border-radius: 8px;
+    padding: 10px;
+    font-family: monospace;
+    font-size: 11px;
+    color: #A7F3D0;
     max-height: 120px;
     overflow-y: auto;
     white-space: pre-wrap;
   }
 
   .btn-drive-link {
-    text-align: center;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
     background: #1E293B;
-    border: 1px solid #334155;
+    border: 1px solid #38BDF8;
     color: #38BDF8;
     text-decoration: none;
     padding: 12px;
@@ -385,7 +382,7 @@
       </div>
 
       <div class="chip-group">
-        <span class="chip" onclick="setPrompt('60代向けの健康管理アプリの提案資料をPowerPointで作ってください')">📊 健康アプリPPT</span>
+        <span class="chip" onclick="setPrompt('60代向けの健康アプリの市場調査を行った結果をまとめてください')">📊 健康アプリPPT</span>
         <span class="chip" onclick="setPrompt('最新のAIトレンド調査レポートを作成してください')">🔍 AIニュース調査</span>
         <span class="chip" onclick="setPrompt('Googleドライブの最新ファイルを更新してください')">📁 Drive更新</span>
       </div>
@@ -541,36 +538,23 @@
 
     log('送信中...');
 
-    // GASの認証画面待ちなどでfetchが無応答のまま固まるのを防ぐため、
-    // 15秒でタイムアウトさせる
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 15000);
-
     try {
       const payload = { prompt: prompt, category: category, user: ALLOWED_EMAIL };
-
+      
       await fetch(gasUrl, {
         method: 'POST',
         mode: 'no-cors',
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        body: new URLSearchParams(payload).toString(),
-        signal: controller.signal
+        body: new URLSearchParams(payload).toString()
       });
 
-      clearTimeout(timeoutId);
       document.getElementById('promptInput').value = '';
       log('✅ 送信完了！Google Drive の『外からの指示.txt』に追記されました。');
       alert('Google Driveの『外からの指示.txt』へ指示を追加しました！Antigravityが処理を開始します。');
 
     } catch (err) {
-      clearTimeout(timeoutId);
-      if (err.name === 'AbortError') {
-        log('❌ タイムアウト: GASからの応答がありません（15秒経過）。GASのデプロイ設定（アクセス:全員）を確認してください。');
-        alert('応答がありません。GAS側のデプロイ設定（アクセス権限）をご確認ください。');
-      } else {
-        log('❌ 送信エラー: ' + err.message);
-        alert('送信中にエラーが発生しました: ' + err.message);
-      }
+      log('❌ 送信エラー: ' + err.message);
+      alert('送信中にエラーが発生しました: ' + err.message);
     }
   }
 </script>
