@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>Antigravity 外出先指示ポータル (制限アクセス)</title>
+<title>Antigravity 外出先指示ポータル (所有者認証)</title>
 <!-- Google Identity Services SDK -->
 <script src="https://accounts.google.com/gsi/client" async defer></script>
 <style>
@@ -71,22 +71,9 @@
     box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.4);
   }
 
-  .auth-icon {
-    font-size: 44px;
-    margin-bottom: 4px;
-  }
-
-  .auth-title {
-    font-size: 18px;
-    font-weight: 800;
-    color: #F8FAFC;
-  }
-
-  .auth-desc {
-    font-size: 13px;
-    color: #94A3B8;
-    line-height: 1.5;
-  }
+  .auth-icon { font-size: 44px; margin-bottom: 2px; }
+  .auth-title { font-size: 18px; font-weight: 800; color: #F8FAFC; }
+  .auth-desc { font-size: 13px; color: #94A3B8; line-height: 1.5; }
 
   .allowed-email {
     font-size: 13px;
@@ -96,6 +83,40 @@
     padding: 6px 12px;
     border-radius: 6px;
     border: 1px solid #334155;
+  }
+
+  .pin-input-group {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-top: 6px;
+  }
+
+  .pin-input {
+    width: 100%;
+    background: #0F172A;
+    border: 1.5px solid #334155;
+    color: #F8FAFC;
+    padding: 12px;
+    border-radius: 10px;
+    font-size: 16px;
+    text-align: center;
+    letter-spacing: 0.2em;
+    outline: none;
+  }
+
+  .pin-input:focus { border-color: #38BDF8; }
+
+  .login-btn {
+    background: linear-gradient(135deg, #0284C7 0%, #2563EB 100%);
+    color: #FFFFFF;
+    border: none;
+    padding: 12px;
+    border-radius: 10px;
+    font-size: 15px;
+    font-weight: 700;
+    cursor: pointer;
   }
 
   /* Main Remote UI (Hidden until authenticated) */
@@ -285,48 +306,30 @@
   
   <div class="header">
     <h1>🔒 Antigravity 専用リモコン</h1>
-    <span class="badge-restricted">所有者限定</span>
+    <span class="badge-restricted">所有者認証</span>
   </div>
 
   <!-- Authentication Screen -->
   <div class="auth-card" id="authCard">
     <div class="auth-icon">🔐</div>
-    <div class="auth-title">Google アカウント認証</div>
+    <div class="auth-title">所有者認証</div>
     <div class="auth-desc">
-      本ポータルはセキュリティ保護のため所有者限定アクセスとなっています。
+      セキュリティ保護のためパスコード認証が必要です。
     </div>
-    <div class="allowed-email">許可アドレス: aksaginuma@gmail.com</div>
+    <div class="allowed-email">所有者: aksaginuma@gmail.com</div>
 
-    <!-- Google Sign-In Button Container -->
-    <div id="g_id_onload"
-         data-client_id="YOUR_GOOGLE_CLIENT_ID.apps.googleusercontent.com"
-         data-callback="handleCredentialResponse"
-         data-auto_prompt="false">
+    <div class="pin-input-group">
+      <input type="password" id="accessPin" class="pin-input" placeholder="パスコード入力..." onkeydown="if(event.key==='Enter') verifyPin()">
+      <button class="login-btn" onclick="verifyPin()">ログイン 🔓</button>
     </div>
-    <div class="g_id_signin"
-         data-type="standard"
-         data-size="large"
-         data-theme="filled_blue"
-         data-text="sign_in_with"
-         data-shape="rectangular"
-         data-logo_alignment="left">
-    </div>
-
-    <!-- Fallback / Pin Code Access -->
-    <div style="margin-top: 12px; font-size: 12px; color: #64748B;">
-      または専用アクセスコードでログイン:
-      <div style="display: flex; gap: 8px; margin-top: 8px;">
-        <input type="password" id="accessPin" placeholder="アクセスコード..." style="background:#0F172A; border:1px solid #334155; color:#FFF; padding:6px 10px; border-radius:6px; font-size:12px; flex:1;">
-        <button onclick="verifyPin()" style="background:#0284C7; color:#FFF; border:none; padding:6px 12px; border-radius:6px; font-size:12px; font-weight:700;">認証</button>
-      </div>
-    </div>
+    <div style="font-size: 11px; color: #64748B; margin-top: 4px;">※初期パスコード: 6291</div>
   </div>
 
   <!-- Main Remote UI (Hidden until authenticated) -->
   <div id="mainUI">
     
     <div class="user-bar">
-      <span>👤 ログイン中: <strong id="loggedInUser">aksaginuma@gmail.com</strong></span>
+      <span>👤 所有者認証済み: <strong>aksaginuma@gmail.com</strong></span>
       <button class="logout-btn" onclick="logout()">ログアウト</button>
     </div>
 
@@ -379,14 +382,12 @@
 
 <script>
   const ALLOWED_EMAIL = "aksaginuma@gmail.com";
-  // デフォルト暗号化ピンコード (aksaginuma 専用PIN)
   const DEFAULT_PIN = "6291";
 
-  // 認証チェック
   window.onload = function() {
-    const authStatus = sessionStorage.getItem('ANTIGRAVITY_AUTH_USER');
-    if (authStatus === ALLOWED_EMAIL) {
-      showMainUI(ALLOWED_EMAIL);
+    const authStatus = localStorage.getItem('ANTIGRAVITY_AUTH_SUCCESS');
+    if (authStatus === 'true') {
+      showMainUI();
     }
     
     const savedUrl = localStorage.getItem('ANTIGRAVITY_GAS_URL') || '';
@@ -395,51 +396,24 @@
     }
   };
 
-  // JWT デコード (Google ID Token 解析)
-  function parseJwt(token) {
-    try {
-      const base64Url = token.split('.')[1];
-      const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
-      const jsonPayload = decodeURIComponent(atob(base64).split('').map(function(c) {
-        return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
-      }).join(''));
-      return JSON.parse(jsonPayload);
-    } catch(e) { return null; }
-  }
-
-  // Google ログインレスポンス処理
-  function handleCredentialResponse(response) {
-    const payload = parseJwt(response.credential);
-    if (payload && payload.email) {
-      if (payload.email.toLowerCase() === ALLOWED_EMAIL.toLowerCase()) {
-        sessionStorage.setItem('ANTIGRAVITY_AUTH_USER', ALLOWED_EMAIL);
-        showMainUI(ALLOWED_EMAIL);
-      } else {
-        alert(`⛔ アクセス拒否: ${payload.email}\nこのサイトは ${ALLOWED_EMAIL} の所有者限定です。`);
-      }
-    }
-  }
-
-  // PINコードフォールバック認証
   function verifyPin() {
     const pin = document.getElementById('accessPin').value.trim();
     if (pin === DEFAULT_PIN) {
-      sessionStorage.setItem('ANTIGRAVITY_AUTH_USER', ALLOWED_EMAIL);
-      showMainUI(ALLOWED_EMAIL);
+      localStorage.setItem('ANTIGRAVITY_AUTH_SUCCESS', 'true');
+      showMainUI();
     } else {
-      alert('⛔ アクセスコードが違います');
+      alert('⛔ パスコードが違います');
     }
   }
 
-  function showMainUI(email) {
+  function showMainUI() {
     document.getElementById('authCard').style.display = 'none';
     document.getElementById('mainUI').style.display = 'flex';
-    document.getElementById('loggedInUser').textContent = email;
-    log('認証成功: ' + email);
+    log('所有者認証成功: ' + ALLOWED_EMAIL);
   }
 
   function logout() {
-    sessionStorage.removeItem('ANTIGRAVITY_AUTH_USER');
+    localStorage.removeItem('ANTIGRAVITY_AUTH_SUCCESS');
     location.reload();
   }
 
