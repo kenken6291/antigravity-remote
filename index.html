@@ -4,8 +4,6 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>Antigravity 外出先指示ポータル (所有者認証)</title>
-<!-- Google Identity Services SDK -->
-<script src="https://accounts.google.com/gsi/client" async defer></script>
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
   body {
@@ -48,13 +46,13 @@
   }
 
   .badge-restricted {
-    background: rgba(239, 68, 68, 0.15);
-    color: #F87171;
+    background: rgba(52, 211, 153, 0.15);
+    color: #34D399;
     padding: 4px 10px;
     border-radius: 20px;
     font-size: 11px;
     font-weight: 700;
-    border: 1px solid rgba(239, 68, 68, 0.3);
+    border: 1px solid rgba(52, 211, 153, 0.3);
   }
 
   /* Auth Screen Card */
@@ -208,15 +206,48 @@
     100% { transform: scale(1); }
   }
 
+  /* GAS Config Area (Shown FIRST TIME ONLY) */
+  .gas-config-box {
+    background: rgba(14, 165, 233, 0.1);
+    border: 1px dashed #0284C7;
+    border-radius: 10px;
+    padding: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .gas-config-title {
+    font-size: 12px;
+    font-weight: 700;
+    color: #38BDF8;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
   .gas-url-input {
     background: #0F172A;
     border: 1px solid #334155;
-    color: #94A3B8;
-    padding: 8px 12px;
+    color: #F8FAFC;
+    padding: 10px 12px;
     border-radius: 8px;
-    font-size: 11px;
+    font-size: 12px;
     width: 100%;
     outline: none;
+  }
+
+  .gas-url-input:focus { border-color: #38BDF8; }
+
+  .save-url-btn {
+    background: #0284C7;
+    color: #FFFFFF;
+    border: none;
+    padding: 8px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 700;
+    cursor: pointer;
   }
 
   .chip-group {
@@ -289,14 +320,13 @@
     color: #38BDF8;
   }
 
-  .logout-btn {
-    background: #334155;
-    color: #F8FAFC;
+  .toggle-settings-btn {
+    background: transparent;
+    color: #64748B;
     border: none;
-    padding: 4px 10px;
-    border-radius: 4px;
     font-size: 11px;
     cursor: pointer;
+    text-decoration: underline;
   }
 </style>
 </head>
@@ -305,8 +335,8 @@
 <div class="app-container">
   
   <div class="header">
-    <h1>🔒 Antigravity 専用リモコン</h1>
-    <span class="badge-restricted">所有者認証</span>
+    <h1>🚀 Antigravity 外出先リモコン</h1>
+    <span class="badge-restricted">所有者認証完了</span>
   </div>
 
   <!-- Authentication Screen -->
@@ -329,16 +359,20 @@
   <div id="mainUI">
     
     <div class="user-bar">
-      <span>👤 所有者認証済み: <strong>aksaginuma@gmail.com</strong></span>
-      <button class="logout-btn" onclick="logout()">ログアウト</button>
+      <span>👤 <strong>aksaginuma@gmail.com</strong></span>
+      <button class="toggle-settings-btn" onclick="toggleGasConfig()">⚙️ 設定変更</button>
+    </div>
+
+    <!-- GAS URL Configuration (Shown ONLY IF NOT SET YET) -->
+    <div class="gas-config-box" id="gasConfigBox" style="display: none;">
+      <div class="gas-config-title">
+        <span>⚙️ 最初だけ設定 (GAS Web App URL)</span>
+      </div>
+      <input type="text" id="gasUrlInput" class="gas-url-input" placeholder="GASのデプロイWeb App URLを貼り付け...">
+      <button class="save-url-btn" onclick="saveGasUrl()">設定を保存（次回から自動読み込み）</button>
     </div>
 
     <div class="card">
-      <div class="card-label">
-        <span>設定: GAS Web App URL</span>
-      </div>
-      <input type="text" id="gasUrlInput" class="gas-url-input" placeholder="GASのデプロイWeb App URLを入力..." onchange="saveGasUrl()">
-
       <div class="card-label">
         <span>作業指示を入力</span>
         <select id="categorySelect">
@@ -369,7 +403,7 @@
       <div class="card-label">
         <span>通信ログ / 状況</span>
       </div>
-      <div class="log-box" id="logBox">通信準備完了</div>
+      <div class="log-box" id="logBox">準備完了</div>
     </div>
 
     <a href="https://drive.google.com/drive/u/0/folders/1TKxNmocrE77blPUPt2qlbi3MT8VlramY" target="_blank" class="btn-drive-link">
@@ -389,11 +423,6 @@
     if (authStatus === 'true') {
       showMainUI();
     }
-    
-    const savedUrl = localStorage.getItem('ANTIGRAVITY_GAS_URL') || '';
-    if (savedUrl) {
-      document.getElementById('gasUrlInput').value = savedUrl;
-    }
   };
 
   function verifyPin() {
@@ -409,18 +438,37 @@
   function showMainUI() {
     document.getElementById('authCard').style.display = 'none';
     document.getElementById('mainUI').style.display = 'flex';
-    log('所有者認証成功: ' + ALLOWED_EMAIL);
-  }
-
-  function logout() {
-    localStorage.removeItem('ANTIGRAVITY_AUTH_SUCCESS');
-    location.reload();
+    
+    // GAS URLの初期判定 (最初だけ入力させる)
+    const savedUrl = localStorage.getItem('ANTIGRAVITY_GAS_URL') || '';
+    const configBox = document.getElementById('gasConfigBox');
+    
+    if (!savedUrl) {
+      // 未設定の場合のみ表示
+      configBox.style.display = 'flex';
+      log('⚠️ 初回設定: GAS Web App URL を設定してください');
+    } else {
+      document.getElementById('gasUrlInput').value = savedUrl;
+      configBox.style.display = 'none';
+      log('✅ GAS URL 自動読込完了');
+    }
   }
 
   function saveGasUrl() {
     const url = document.getElementById('gasUrlInput').value.trim();
+    if (!url) {
+      alert('URLを入力してください');
+      return;
+    }
     localStorage.setItem('ANTIGRAVITY_GAS_URL', url);
-    log('GAS URLを保存しました');
+    document.getElementById('gasConfigBox').style.display = 'none';
+    log('✅ GAS URL を自動保存しました。次回から入力不要です！');
+    alert('設定を自動保存しました！次回からは入力不要で直接使えます。');
+  }
+
+  function toggleGasConfig() {
+    const configBox = document.getElementById('gasConfigBox');
+    configBox.style.display = (configBox.style.display === 'none') ? 'flex' : 'none';
   }
 
   function log(msg) {
@@ -481,14 +529,17 @@
   }
 
   async function sendToGas() {
-    const gasUrl = document.getElementById('gasUrlInput').value.trim();
+    let gasUrl = localStorage.getItem('ANTIGRAVITY_GAS_URL') || '';
+    
+    if (!gasUrl) {
+      document.getElementById('gasConfigBox').style.display = 'flex';
+      alert('最初に「GAS Web App URL」を設定して保存してください');
+      return;
+    }
+
     const prompt = document.getElementById('promptInput').value.trim();
     const category = document.getElementById('categorySelect').value;
 
-    if (!gasUrl) {
-      alert('GAS のデプロイ Web App URL を入力してください');
-      return;
-    }
     if (!prompt) {
       alert('指示内容を入力してください');
       return;
