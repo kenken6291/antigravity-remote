@@ -402,7 +402,7 @@
       <div class="log-box" id="logBox">準備完了</div>
     </div>
 
-    <a href="https://drive.google.com/drive/u/0/folders/1TKxNmocrE77blPUPt2qlbi3MT8VlramY" target="_blank" class="btn-drive-link">
+    <a href="https://drive.google.com/drive/u/0/folders/1p21f3HGMtHaBi4n2U5I04S3CuY2quAMp" target="_blank" class="btn-drive-link">
       📁 Google Drive の『外からの指示.txt』を開く
     </a>
 
@@ -542,7 +542,6 @@
     log('送信中...');
 
     try {
-      // GAS への送信 (JSON ＆ URLSearchParams の二重確実送信)
       const payload = { prompt: prompt, category: category, user: ALLOWED_EMAIL };
       
       await fetch(gasUrl, {
