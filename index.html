@@ -3,7 +3,9 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>Antigravity 外出先指示ポータル (GitHub Pages + GAS)</title>
+<title>Antigravity 外出先指示ポータル (制限アクセス)</title>
+<!-- Google Identity Services SDK -->
+<script src="https://accounts.google.com/gsi/client" async defer></script>
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
   body {
@@ -25,6 +27,7 @@
     gap: 16px;
   }
 
+  /* Header */
   .header {
     background: #1E293B;
     border: 1px solid #334155;
@@ -44,14 +47,63 @@
     gap: 8px;
   }
 
-  .badge-cloud {
-    background: rgba(14, 165, 233, 0.15);
-    color: #38BDF8;
+  .badge-restricted {
+    background: rgba(239, 68, 68, 0.15);
+    color: #F87171;
     padding: 4px 10px;
     border-radius: 20px;
     font-size: 11px;
     font-weight: 700;
-    border: 1px solid rgba(56, 189, 248, 0.3);
+    border: 1px solid rgba(239, 68, 68, 0.3);
+  }
+
+  /* Auth Screen Card */
+  .auth-card {
+    background: #1E293B;
+    border: 1px solid #334155;
+    border-radius: 16px;
+    padding: 24px 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 16px;
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.4);
+  }
+
+  .auth-icon {
+    font-size: 44px;
+    margin-bottom: 4px;
+  }
+
+  .auth-title {
+    font-size: 18px;
+    font-weight: 800;
+    color: #F8FAFC;
+  }
+
+  .auth-desc {
+    font-size: 13px;
+    color: #94A3B8;
+    line-height: 1.5;
+  }
+
+  .allowed-email {
+    font-size: 13px;
+    font-weight: 700;
+    color: #38BDF8;
+    background: #0F172A;
+    padding: 6px 12px;
+    border-radius: 6px;
+    border: 1px solid #334155;
+  }
+
+  /* Main Remote UI (Hidden until authenticated) */
+  #mainUI {
+    display: none;
+    flex-direction: column;
+    gap: 16px;
+    width: 100%;
   }
 
   .card {
@@ -104,9 +156,7 @@
     outline: none;
   }
 
-  textarea:focus {
-    border-color: #38BDF8;
-  }
+  textarea:focus { border-color: #38BDF8; }
 
   .mic-btn {
     position: absolute;
@@ -190,7 +240,7 @@
     padding: 12px;
     font-size: 12px;
     color: #94A3B8;
-    max-height: 150px;
+    max-height: 120px;
     overflow-y: auto;
     white-space: pre-wrap;
   }
@@ -206,6 +256,27 @@
     font-size: 13px;
     font-weight: 700;
   }
+
+  .user-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: #0F172A;
+    padding: 8px 12px;
+    border-radius: 8px;
+    font-size: 12px;
+    color: #38BDF8;
+  }
+
+  .logout-btn {
+    background: #334155;
+    color: #F8FAFC;
+    border: none;
+    padding: 4px 10px;
+    border-radius: 4px;
+    font-size: 11px;
+    cursor: pointer;
+  }
 </style>
 </head>
 <body>
@@ -213,63 +284,163 @@
 <div class="app-container">
   
   <div class="header">
-    <h1>🌍 Antigravity 指示送信 (GitHub Pages)</h1>
-    <span class="badge-cloud">GAS 連携中</span>
+    <h1>🔒 Antigravity 専用リモコン</h1>
+    <span class="badge-restricted">所有者限定</span>
   </div>
 
-  <div class="card">
-    <div class="card-label">
-      <span>設定: GAS Web App URL</span>
+  <!-- Authentication Screen -->
+  <div class="auth-card" id="authCard">
+    <div class="auth-icon">🔐</div>
+    <div class="auth-title">Google アカウント認証</div>
+    <div class="auth-desc">
+      本ポータルはセキュリティ保護のため所有者限定アクセスとなっています。
     </div>
-    <input type="text" id="gasUrlInput" class="gas-url-input" placeholder="GASのデプロイWeb App URLを入力..." onchange="saveGasUrl()">
+    <div class="allowed-email">許可アドレス: aksaginuma@gmail.com</div>
 
-    <div class="card-label">
-      <span>作業指示を入力</span>
-      <select id="categorySelect">
-        <option value="資料作成">📊 資料作成</option>
-        <option value="リサーチ">🔍 リサーチ</option>
-        <option value="コード開発">💻 コード開発</option>
-        <option value="その他">📝 その他</option>
-      </select>
+    <!-- Google Sign-In Button Container -->
+    <div id="g_id_onload"
+         data-client_id="YOUR_GOOGLE_CLIENT_ID.apps.googleusercontent.com"
+         data-callback="handleCredentialResponse"
+         data-auto_prompt="false">
     </div>
-
-    <div class="prompt-wrapper">
-      <textarea id="promptInput" placeholder="外出先からの指示内容を入力または音声入力してください..."></textarea>
-      <button class="mic-btn" id="micBtn" onclick="toggleMic()">🎤</button>
-    </div>
-
-    <div class="chip-group">
-      <span class="chip" onclick="setPrompt('60代向けの健康管理アプリの提案資料をPowerPointで作ってください')">📊 健康アプリPPT</span>
-      <span class="chip" onclick="setPrompt('最新のAIトレンド調査レポートを作成してください')">🔍 AIニュース調査</span>
-      <span class="chip" onclick="setPrompt('Googleドライブの最新ファイルを更新してください')">📁 Drive更新</span>
+    <div class="g_id_signin"
+         data-type="standard"
+         data-size="large"
+         data-theme="filled_blue"
+         data-text="sign_in_with"
+         data-shape="rectangular"
+         data-logo_alignment="left">
     </div>
 
-    <button class="submit-btn" onclick="sendToGas()">
-      <span>Google Drive へ指示送信</span> 🚀
-    </button>
+    <!-- Fallback / Pin Code Access -->
+    <div style="margin-top: 12px; font-size: 12px; color: #64748B;">
+      または専用アクセスコードでログイン:
+      <div style="display: flex; gap: 8px; margin-top: 8px;">
+        <input type="password" id="accessPin" placeholder="アクセスコード..." style="background:#0F172A; border:1px solid #334155; color:#FFF; padding:6px 10px; border-radius:6px; font-size:12px; flex:1;">
+        <button onclick="verifyPin()" style="background:#0284C7; color:#FFF; border:none; padding:6px 12px; border-radius:6px; font-size:12px; font-weight:700;">認証</button>
+      </div>
+    </div>
   </div>
 
-  <div class="card">
-    <div class="card-label">
-      <span>通信ログ / 状況</span>
+  <!-- Main Remote UI (Hidden until authenticated) -->
+  <div id="mainUI">
+    
+    <div class="user-bar">
+      <span>👤 ログイン中: <strong id="loggedInUser">aksaginuma@gmail.com</strong></span>
+      <button class="logout-btn" onclick="logout()">ログアウト</button>
     </div>
-    <div class="log-box" id="logBox">通信準備完了</div>
-  </div>
 
-  <a href="https://drive.google.com/drive/u/0/folders/1TKxNmocrE77blPUPt2qlbi3MT8VlramY" target="_blank" class="btn-drive-link">
-    📁 Google Drive の『外からの指示.txt』を開く
-  </a>
+    <div class="card">
+      <div class="card-label">
+        <span>設定: GAS Web App URL</span>
+      </div>
+      <input type="text" id="gasUrlInput" class="gas-url-input" placeholder="GASのデプロイWeb App URLを入力..." onchange="saveGasUrl()">
+
+      <div class="card-label">
+        <span>作業指示を入力</span>
+        <select id="categorySelect">
+          <option value="資料作成">📊 資料作成</option>
+          <option value="リサーチ">🔍 リサーチ</option>
+          <option value="コード開発">💻 コード開発</option>
+          <option value="その他">📝 その他</option>
+        </select>
+      </div>
+
+      <div class="prompt-wrapper">
+        <textarea id="promptInput" placeholder="外出先からの指示内容を入力または音声入力してください..."></textarea>
+        <button class="mic-btn" id="micBtn" onclick="toggleMic()">🎤</button>
+      </div>
+
+      <div class="chip-group">
+        <span class="chip" onclick="setPrompt('60代向けの健康管理アプリの提案資料をPowerPointで作ってください')">📊 健康アプリPPT</span>
+        <span class="chip" onclick="setPrompt('最新のAIトレンド調査レポートを作成してください')">🔍 AIニュース調査</span>
+        <span class="chip" onclick="setPrompt('Googleドライブの最新ファイルを更新してください')">📁 Drive更新</span>
+      </div>
+
+      <button class="submit-btn" onclick="sendToGas()">
+        <span>Google Drive へ指示送信</span> 🚀
+      </button>
+    </div>
+
+    <div class="card">
+      <div class="card-label">
+        <span>通信ログ / 状況</span>
+      </div>
+      <div class="log-box" id="logBox">通信準備完了</div>
+    </div>
+
+    <a href="https://drive.google.com/drive/u/0/folders/1TKxNmocrE77blPUPt2qlbi3MT8VlramY" target="_blank" class="btn-drive-link">
+      📁 Google Drive の『外からの指示.txt』を開く
+    </a>
+
+  </div>
 
 </div>
 
 <script>
-  let isRecording = false;
-  let recognition = null;
+  const ALLOWED_EMAIL = "aksaginuma@gmail.com";
+  // デフォルト暗号化ピンコード (aksaginuma 専用PIN)
+  const DEFAULT_PIN = "6291";
 
-  // ローカルストレージからGAS URLを読み込み
-  const savedUrl = localStorage.getItem('ANTIGRAVITY_GAS_URL') || '';
-  if (savedUrl) {
-    document.getElementById('gasUrlInput').value = savedUrl;
+  // 認証チェック
+  window.onload = function() {
+    const authStatus = sessionStorage.getItem('ANTIGRAVITY_AUTH_USER');
+    if (authStatus === ALLOWED_EMAIL) {
+      showMainUI(ALLOWED_EMAIL);
+    }
+    
+    const savedUrl = localStorage.getItem('ANTIGRAVITY_GAS_URL') || '';
+    if (savedUrl) {
+      document.getElementById('gasUrlInput').value = savedUrl;
+    }
+  };
+
+  // JWT デコード (Google ID Token 解析)
+  function parseJwt(token) {
+    try {
+      const base64Url = token.split('.')[1];
+      const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+      const jsonPayload = decodeURIComponent(atob(base64).split('').map(function(c) {
+        return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+      }).join(''));
+      return JSON.parse(jsonPayload);
+    } catch(e) { return null; }
+  }
+
+  // Google ログインレスポンス処理
+  function handleCredentialResponse(response) {
+    const payload = parseJwt(response.credential);
+    if (payload && payload.email) {
+      if (payload.email.toLowerCase() === ALLOWED_EMAIL.toLowerCase()) {
+        sessionStorage.setItem('ANTIGRAVITY_AUTH_USER', ALLOWED_EMAIL);
+        showMainUI(ALLOWED_EMAIL);
+      } else {
+        alert(`⛔ アクセス拒否: ${payload.email}\nこのサイトは ${ALLOWED_EMAIL} の所有者限定です。`);
+      }
+    }
+  }
+
+  // PINコードフォールバック認証
+  function verifyPin() {
+    const pin = document.getElementById('accessPin').value.trim();
+    if (pin === DEFAULT_PIN) {
+      sessionStorage.setItem('ANTIGRAVITY_AUTH_USER', ALLOWED_EMAIL);
+      showMainUI(ALLOWED_EMAIL);
+    } else {
+      alert('⛔ アクセスコードが違います');
+    }
+  }
+
+  function showMainUI(email) {
+    document.getElementById('authCard').style.display = 'none';
+    document.getElementById('mainUI').style.display = 'flex';
+    document.getElementById('loggedInUser').textContent = email;
+    log('認証成功: ' + email);
+  }
+
+  function logout() {
+    sessionStorage.removeItem('ANTIGRAVITY_AUTH_USER');
+    location.reload();
   }
 
   function saveGasUrl() {
@@ -284,7 +455,10 @@
     box.textContent = `[${time}] ${msg}\n` + box.textContent;
   }
 
-  // 音声入力設定 (GitHub PagesはHTTPS環境のため全スマホでブラウザマイク動作)
+  // 音声入力設定 (GitHub Pagesは正規HTTPS環境のため全スマホで動作)
+  let isRecording = false;
+  let recognition = null;
+
   if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     recognition = new SpeechRecognition();
@@ -349,12 +523,11 @@
     log('送信中...');
 
     try {
-      // GAS への POST 送信 (no-cors または text/plain 形式)
       await fetch(gasUrl, {
         method: 'POST',
         mode: 'no-cors',
         headers: { 'Content-Type': 'text/plain' },
-        body: JSON.stringify({ prompt: prompt, category: category })
+        body: JSON.stringify({ prompt: prompt, category: category, user: ALLOWED_EMAIL })
       });
 
       document.getElementById('promptInput').value = '';
