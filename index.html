@@ -25,7 +25,6 @@
     gap: 16px;
   }
 
-  /* Header */
   .header {
     background: #1E293B;
     border: 1px solid #334155;
@@ -55,7 +54,6 @@
     border: 1px solid rgba(52, 211, 153, 0.3);
   }
 
-  /* Auth Screen Card */
   .auth-card {
     background: #1E293B;
     border: 1px solid #334155;
@@ -117,7 +115,6 @@
     cursor: pointer;
   }
 
-  /* Main Remote UI (Hidden until authenticated) */
   #mainUI {
     display: none;
     flex-direction: column;
@@ -206,7 +203,6 @@
     100% { transform: scale(1); }
   }
 
-  /* GAS Config Area (Shown FIRST TIME ONLY) */
   .gas-config-box {
     background: rgba(14, 165, 233, 0.1);
     border: 1px dashed #0284C7;
@@ -355,7 +351,7 @@
     <div style="font-size: 11px; color: #64748B; margin-top: 4px;">※初期パスコード: 6291</div>
   </div>
 
-  <!-- Main Remote UI (Hidden until authenticated) -->
+  <!-- Main Remote UI -->
   <div id="mainUI">
     
     <div class="user-bar">
@@ -363,7 +359,7 @@
       <button class="toggle-settings-btn" onclick="toggleGasConfig()">⚙️ 設定変更</button>
     </div>
 
-    <!-- GAS URL Configuration (Shown ONLY IF NOT SET YET) -->
+    <!-- GAS URL Configuration -->
     <div class="gas-config-box" id="gasConfigBox" style="display: none;">
       <div class="gas-config-title">
         <span>⚙️ 最初だけ設定 (GAS Web App URL)</span>
@@ -439,12 +435,10 @@
     document.getElementById('authCard').style.display = 'none';
     document.getElementById('mainUI').style.display = 'flex';
     
-    // GAS URLの初期判定 (最初だけ入力させる)
     const savedUrl = localStorage.getItem('ANTIGRAVITY_GAS_URL') || '';
     const configBox = document.getElementById('gasConfigBox');
     
     if (!savedUrl) {
-      // 未設定の場合のみ表示
       configBox.style.display = 'flex';
       log('⚠️ 初回設定: GAS Web App URL を設定してください');
     } else {
@@ -462,7 +456,7 @@
     }
     localStorage.setItem('ANTIGRAVITY_GAS_URL', url);
     document.getElementById('gasConfigBox').style.display = 'none';
-    log('✅ GAS URL を自動保存しました。次回から入力不要です！');
+    log('✅ GAS URL を自動保存しました！');
     alert('設定を自動保存しました！次回からは入力不要で直接使えます。');
   }
 
@@ -477,7 +471,7 @@
     box.textContent = `[${time}] ${msg}\n` + box.textContent;
   }
 
-  // 音声入力設定 (GitHub Pagesは正規HTTPS環境のため全スマホで動作)
+  // 音声入力設定
   let isRecording = false;
   let recognition = null;
 
@@ -548,11 +542,14 @@
     log('送信中...');
 
     try {
+      // GAS への送信 (JSON ＆ URLSearchParams の二重確実送信)
+      const payload = { prompt: prompt, category: category, user: ALLOWED_EMAIL };
+      
       await fetch(gasUrl, {
         method: 'POST',
         mode: 'no-cors',
-        headers: { 'Content-Type': 'text/plain' },
-        body: JSON.stringify({ prompt: prompt, category: category, user: ALLOWED_EMAIL })
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: new URLSearchParams(payload).toString()
       });
 
       document.getElementById('promptInput').value = '';
