@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Antigravity 外出先指示ポータル (GitHub Pages + GAS)</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Hiragino Kaku Gothic ProN', '游ゴシック', sans-serif;
+    background-color: #0F172A;
+    color: #F8FAFC;
+    min-height: 100vh;
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .app-container {
+    width: 100%;
+    max-width: 480px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .header {
+    background: #1E293B;
+    border: 1px solid #334155;
+    border-radius: 12px;
+    padding: 16px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .header h1 {
+    font-size: 15px;
+    font-weight: 800;
+    color: #38BDF8;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .badge-cloud {
+    background: rgba(14, 165, 233, 0.15);
+    color: #38BDF8;
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 700;
+    border: 1px solid rgba(56, 189, 248, 0.3);
+  }
+
+  .card {
+    background: #1E293B;
+    border: 1px solid #334155;
+    border-radius: 16px;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.4);
+  }
+
+  .card-label {
+    font-size: 13px;
+    font-weight: 700;
+    color: #94A3B8;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  select {
+    background: #0F172A;
+    border: 1px solid #475569;
+    color: #F8FAFC;
+    padding: 6px 10px;
+    border-radius: 8px;
+    font-size: 12px;
+    outline: none;
+  }
+
+  .prompt-wrapper {
+    position: relative;
+    width: 100%;
+  }
+
+  textarea {
+    width: 100%;
+    height: 120px;
+    background: #0F172A;
+    border: 1.5px solid #334155;
+    border-radius: 12px;
+    padding: 14px;
+    padding-right: 48px;
+    color: #F8FAFC;
+    font-size: 15px;
+    line-height: 1.5;
+    resize: none;
+    outline: none;
+  }
+
+  textarea:focus {
+    border-color: #38BDF8;
+  }
+
+  .mic-btn {
+    position: absolute;
+    right: 10px;
+    bottom: 12px;
+    background: #334155;
+    color: #38BDF8;
+    border: none;
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    cursor: pointer;
+  }
+
+  .mic-btn.recording {
+    background: #EF4444;
+    color: #FFFFFF;
+    animation: pulse 1s infinite;
+  }
+
+  @keyframes pulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.1); }
+    100% { transform: scale(1); }
+  }
+
+  .gas-url-input {
+    background: #0F172A;
+    border: 1px solid #334155;
+    color: #94A3B8;
+    padding: 8px 12px;
+    border-radius: 8px;
+    font-size: 11px;
+    width: 100%;
+    outline: none;
+  }
+
+  .chip-group {
+    display: flex;
+    gap: 8px;
+    overflow-x: auto;
+    padding-bottom: 4px;
+    scrollbar-width: none;
+  }
+
+  .chip {
+    background: #0F172A;
+    border: 1px solid #334155;
+    color: #CBD5E1;
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+    white-space: nowrap;
+    cursor: pointer;
+  }
+
+  .submit-btn {
+    background: linear-gradient(135deg, #0284C7 0%, #2563EB 100%);
+    color: #FFFFFF;
+    border: none;
+    padding: 14px;
+    border-radius: 12px;
+    font-size: 16px;
+    font-weight: 700;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+  }
+
+  .log-box {
+    background: #0F172A;
+    border: 1px solid #334155;
+    border-radius: 10px;
+    padding: 12px;
+    font-size: 12px;
+    color: #94A3B8;
+    max-height: 150px;
+    overflow-y: auto;
+    white-space: pre-wrap;
+  }
+
+  .btn-drive-link {
+    text-align: center;
+    background: #1E293B;
+    border: 1px solid #334155;
+    color: #38BDF8;
+    text-decoration: none;
+    padding: 12px;
+    border-radius: 10px;
+    font-size: 13px;
+    font-weight: 700;
+  }
+</style>
+</head>
+<body>
+
+<div class="app-container">
+  
+  <div class="header">
+    <h1>🌍 Antigravity 指示送信 (GitHub Pages)</h1>
+    <span class="badge-cloud">GAS 連携中</span>
+  </div>
+
+  <div class="card">
+    <div class="card-label">
+      <span>設定: GAS Web App URL</span>
+    </div>
+    <input type="text" id="gasUrlInput" class="gas-url-input" placeholder="GASのデプロイWeb App URLを入力..." onchange="saveGasUrl()">
+
+    <div class="card-label">
+      <span>作業指示を入力</span>
+      <select id="categorySelect">
+        <option value="資料作成">📊 資料作成</option>
+        <option value="リサーチ">🔍 リサーチ</option>
+        <option value="コード開発">💻 コード開発</option>
+        <option value="その他">📝 その他</option>
+      </select>
+    </div>
+
+    <div class="prompt-wrapper">
+      <textarea id="promptInput" placeholder="外出先からの指示内容を入力または音声入力してください..."></textarea>
+      <button class="mic-btn" id="micBtn" onclick="toggleMic()">🎤</button>
+    </div>
+
+    <div class="chip-group">
+      <span class="chip" onclick="setPrompt('60代向けの健康管理アプリの提案資料をPowerPointで作ってください')">📊 健康アプリPPT</span>
+      <span class="chip" onclick="setPrompt('最新のAIトレンド調査レポートを作成してください')">🔍 AIニュース調査</span>
+      <span class="chip" onclick="setPrompt('Googleドライブの最新ファイルを更新してください')">📁 Drive更新</span>
+    </div>
+
+    <button class="submit-btn" onclick="sendToGas()">
+      <span>Google Drive へ指示送信</span> 🚀
+    </button>
+  </div>
+
+  <div class="card">
+    <div class="card-label">
+      <span>通信ログ / 状況</span>
+    </div>
+    <div class="log-box" id="logBox">通信準備完了</div>
+  </div>
+
+  <a href="https://drive.google.com/drive/u/0/folders/1TKxNmocrE77blPUPt2qlbi3MT8VlramY" target="_blank" class="btn-drive-link">
+    📁 Google Drive の『外からの指示.txt』を開く
+  </a>
+
+</div>
+
+<script>
+  let isRecording = false;
+  let recognition = null;
+
+  // ローカルストレージからGAS URLを読み込み
+  const savedUrl = localStorage.getItem('ANTIGRAVITY_GAS_URL') || '';
+  if (savedUrl) {
+    document.getElementById('gasUrlInput').value = savedUrl;
+  }
+
+  function saveGasUrl() {
+    const url = document.getElementById('gasUrlInput').value.trim();
+    localStorage.setItem('ANTIGRAVITY_GAS_URL', url);
+    log('GAS URLを保存しました');
+  }
+
+  function log(msg) {
+    const box = document.getElementById('logBox');
+    const time = new Date().toLocaleTimeString();
+    box.textContent = `[${time}] ${msg}\n` + box.textContent;
+  }
+
+  // 音声入力設定 (GitHub PagesはHTTPS環境のため全スマホでブラウザマイク動作)
+  if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    recognition = new SpeechRecognition();
+    recognition.lang = 'ja-JP';
+    recognition.continuous = false;
+    recognition.interimResults = true;
+
+    recognition.onresult = function(event) {
+      let text = '';
+      for (let i = event.resultIndex; i < event.results.length; ++i) {
+        text += event.results[i][0].transcript;
+      }
+      if (text) {
+        document.getElementById('promptInput').value = text;
+      }
+    };
+
+    recognition.onerror = function(e) { log('音声認識エラー: ' + e.error); stopMic(); };
+    recognition.onend = function() { stopMic(); };
+  }
+
+  function toggleMic() {
+    if (!recognition) {
+      document.getElementById('promptInput').focus();
+      alert('入力枠をタップしてキーボードのマイクボタンをご利用ください');
+      return;
+    }
+    if (isRecording) { stopMic(); } else { startMic(); }
+  }
+
+  function startMic() {
+    isRecording = true;
+    document.getElementById('micBtn').classList.add('recording');
+    recognition.start();
+    log('音声入力中...');
+  }
+
+  function stopMic() {
+    isRecording = false;
+    document.getElementById('micBtn').classList.remove('recording');
+    try { recognition.stop(); } catch(e){}
+  }
+
+  function setPrompt(txt) {
+    document.getElementById('promptInput').value = txt;
+  }
+
+  async function sendToGas() {
+    const gasUrl = document.getElementById('gasUrlInput').value.trim();
+    const prompt = document.getElementById('promptInput').value.trim();
+    const category = document.getElementById('categorySelect').value;
+
+    if (!gasUrl) {
+      alert('GAS のデプロイ Web App URL を入力してください');
+      return;
+    }
+    if (!prompt) {
+      alert('指示内容を入力してください');
+      return;
+    }
+
+    log('送信中...');
+
+    try {
+      // GAS への POST 送信 (no-cors または text/plain 形式)
+      await fetch(gasUrl, {
+        method: 'POST',
+        mode: 'no-cors',
+        headers: { 'Content-Type': 'text/plain' },
+        body: JSON.stringify({ prompt: prompt, category: category })
+      });
+
+      document.getElementById('promptInput').value = '';
+      log('✅ 送信完了！Google Drive の『外からの指示.txt』に追記されました。');
+      alert('Google Driveの『外からの指示.txt』へ指示を追加しました！Antigravityが処理を開始します。');
+
+    } catch (err) {
+      log('❌ 送信エラー: ' + err.message);
+      alert('送信中にエラーが発生しました: ' + err.message);
+    }
+  }
+</script>
+</body>
+</html>
