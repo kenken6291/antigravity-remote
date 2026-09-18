@@ -541,23 +541,36 @@
 
     log('送信中...');
 
+    // GASの認証画面待ちなどでfetchが無応答のまま固まるのを防ぐため、
+    // 15秒でタイムアウトさせる
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 15000);
+
     try {
       const payload = { prompt: prompt, category: category, user: ALLOWED_EMAIL };
-      
+
       await fetch(gasUrl, {
         method: 'POST',
         mode: 'no-cors',
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        body: new URLSearchParams(payload).toString()
+        body: new URLSearchParams(payload).toString(),
+        signal: controller.signal
       });
 
+      clearTimeout(timeoutId);
       document.getElementById('promptInput').value = '';
       log('✅ 送信完了！Google Drive の『外からの指示.txt』に追記されました。');
       alert('Google Driveの『外からの指示.txt』へ指示を追加しました！Antigravityが処理を開始します。');
 
     } catch (err) {
-      log('❌ 送信エラー: ' + err.message);
-      alert('送信中にエラーが発生しました: ' + err.message);
+      clearTimeout(timeoutId);
+      if (err.name === 'AbortError') {
+        log('❌ タイムアウト: GASからの応答がありません（15秒経過）。GASのデプロイ設定（アクセス:全員）を確認してください。');
+        alert('応答がありません。GAS側のデプロイ設定（アクセス権限）をご確認ください。');
+      } else {
+        log('❌ 送信エラー: ' + err.message);
+        alert('送信中にエラーが発生しました: ' + err.message);
+      }
     }
   }
 </script>
