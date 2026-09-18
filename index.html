@@ -133,20 +133,31 @@
     box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.4);
   }
 
-  .card-label {
-    font-size: 13px;
+  .card-label-row {
+    display: flex;
+    gap: 10px;
+    width: 100%;
+  }
+
+  .select-group {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .select-label {
+    font-size: 11px;
     font-weight: 700;
     color: #94A3B8;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
   }
 
   select {
+    width: 100%;
     background: #0F172A;
     border: 1px solid #475569;
     color: #F8FAFC;
-    padding: 6px 10px;
+    padding: 8px;
     border-radius: 8px;
     font-size: 13px;
     outline: none;
@@ -300,36 +311,6 @@
     border: none;
   }
 
-  .btn-output-link {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-    background: linear-gradient(135deg, #10B981 0%, #059669 100%);
-    color: #FFFFFF;
-    text-decoration: none;
-    padding: 12px;
-    border-radius: 10px;
-    font-size: 13px;
-    font-weight: 800;
-    box-shadow: 0 4px 14px rgba(16, 185, 129, 0.3);
-  }
-
-  .btn-drive-link {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-    background: #1E293B;
-    border: 1px solid #38BDF8;
-    color: #38BDF8;
-    text-decoration: none;
-    padding: 12px;
-    border-radius: 10px;
-    font-size: 13px;
-    font-weight: 700;
-  }
-
   .user-bar {
     display: flex;
     justify-content: space-between;
@@ -394,25 +375,39 @@
     </div>
 
     <div class="card">
-      <div class="card-label">
-        <span>作業指示を入力</span>
-        <select id="categorySelect">
-          <option value="資料作成">📊 資料作成</option>
-          <option value="リサーチ">🔍 リサーチ</option>
-          <option value="コード開発">💻 コード開発</option>
-          <option value="その他">📝 その他</option>
-        </select>
+      
+      <div class="card-label-row">
+        <div class="select-group">
+          <span class="select-label">タスク種別</span>
+          <select id="categorySelect">
+            <option value="資料作成">📊 資料作成</option>
+            <option value="リサーチ">🔍 リサーチ</option>
+            <option value="コード開発">💻 コード開発</option>
+            <option value="その他">📝 その他</option>
+          </select>
+        </div>
+
+        <div class="select-group">
+          <span class="select-label">希望の出力形式</span>
+          <select id="formatSelect">
+            <option value="PowerPoint">📊 PowerPoint (.pptx)</option>
+            <option value="Googleスライド">🌐 Google スライド</option>
+            <option value="Excel">📈 Excel (.xlsx)</option>
+            <option value="Googleスプレッドシート">📋 Google スプレッドシート</option>
+            <option value="Googleフォーム">📝 Google フォーム</option>
+          </select>
+        </div>
       </div>
 
       <div class="prompt-wrapper">
-        <textarea id="promptInput" placeholder="外出先からの指示内容を入力または音声入力してください..."></textarea>
+        <textarea id="promptInput" placeholder="指示内容を入力または音声入力してください..."></textarea>
         <button class="mic-btn" id="micBtn" onclick="toggleMic()">🎤</button>
       </div>
 
       <div class="chip-group">
-        <span class="chip" onclick="setPrompt('60代向けの健康アプリの市場調査を行った結果をまとめてください')">📊 健康アプリPPT</span>
-        <span class="chip" onclick="setPrompt('最新のAIトレンド調査レポートを作成してください')">🔍 AIニュース調査</span>
-        <span class="chip" onclick="setPrompt('Googleドライブの最新ファイルを更新してください')">📁 Drive更新</span>
+        <span class="chip" onclick="setPrompt('60代向けの健康アプリの市場調査結果をまとめてください')">📊 シニアアプリ調査</span>
+        <span class="chip" onclick="setPrompt('AI業界の最新動向データを集計した表を作成してください')">📈 AI業界データExcel</span>
+        <span class="chip" onclick="setPrompt('新規事業のアイデアヒアリングアンケートを作成してください')">📝 調査フォーム</span>
       </div>
 
       <button class="submit-btn" onclick="sendToGas()">
@@ -422,8 +417,8 @@
 
     <!-- Output Folder Embedded View (1TKxNmocrE77blPUPt2qlbi3MT8VlramY) -->
     <div class="card">
-      <div class="card-label">
-        <span>📊 完成成果物フォータル (output) プレビュー</span>
+      <div class="card-label" style="display: flex; justify-content: space-between; width: 100%;">
+        <span>📊 完成成果物ポータル (output) プレビュー</span>
         <a href="https://drive.google.com/drive/u/0/folders/1TKxNmocrE77blPUPt2qlbi3MT8VlramY" target="_blank" style="color: #38BDF8; font-size: 11px; text-decoration: none;">全画面で開く ↗</a>
       </div>
       <div class="drive-iframe-container">
@@ -438,8 +433,8 @@
       <div class="log-box" id="logBox">準備完了</div>
     </div>
 
-    <a href="https://drive.google.com/drive/u/0/folders/1p21f3HGMtHaBi4n2U5I04S3CuY2quAMp" target="_blank" class="btn-drive-link">
-      📁 指し入力用『外からの指示.txt』を開く (1p21f3HGMt...)
+    <a href="https://drive.google.com/drive/u/0/folders/1p21f3HGMtHaBi4n2U5I04S3CuY2quAMp" target="_blank" style="display: flex; align-items: center; justify-content: center; gap: 8px; background: #1E293B; border: 1px solid #38BDF8; color: #38BDF8; text-decoration: none; padding: 12px; border-radius: 10px; font-size: 13px; font-weight: 700;">
+      📁 指示入力用『外からの指示.txt』を開く (1p21f3HGMt...)
     </a>
 
   </div>
@@ -569,6 +564,7 @@
 
     const prompt = document.getElementById('promptInput').value.trim();
     const category = document.getElementById('categorySelect').value;
+    const format = document.getElementById('formatSelect').value;
 
     if (!prompt) {
       alert('指示内容を入力してください');
@@ -578,7 +574,8 @@
     log('送信中...');
 
     try {
-      const payload = { prompt: prompt, category: category, user: ALLOWED_EMAIL };
+      const fullPrompt = `[形式:${format}] ${prompt}`;
+      const payload = { prompt: fullPrompt, category: category, user: ALLOWED_EMAIL };
       
       await fetch(gasUrl, {
         method: 'POST',
@@ -588,8 +585,8 @@
       });
 
       document.getElementById('promptInput').value = '';
-      log('✅ 送信完了！Google Drive の『外からの指示.txt』に追記されました。');
-      alert('Google Driveの『外からの指示.txt』へ指示を追加しました！Antigravityが処理を開始します。');
+      log(`✅ 送信完了！(${category} / ${format}) Google Drive へ追加されました。`);
+      alert(`Google Drive へ指示 (${category} / ${format}) を追加しました！Antigravityが生成を開始します。`);
 
     } catch (err) {
       log('❌ 送信エラー: ' + err.message);
